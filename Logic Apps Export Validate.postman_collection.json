@@ -1,0 +1,158 @@
+{
+	"info": {
+		"_postman_id": "4639b71d-7d00-4add-9544-68bc15120b7e",
+		"name": "Logic Apps Export Validate",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "735793"
+	},
+	"item": [
+		{
+			"name": "Validate Logic Apps List",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"properties\": {\r\n        \"workflows\": [\r\n            {\r\n                \"id\": \"/subscriptions/{{subscriptionID}}/resourceGroups/{{rgName}}/providers/Microsoft.Logic/workflows/LogicApp1\"\r\n            },\r\n            {\r\n                \"id\": \"/subscriptions/{{subscriptionID}}/resourceGroups/{{rgName}}/providers/Microsoft.Logic/workflows/LogicApp2\"\r\n            }\r\n        ],\r\n        \"workflowExportOptions\": \"\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://management.azure.com/subscriptions/{{subscriptionID}}/providers/Microsoft.Logic/locations/{{ISERegionName}}/ValidateWorkflowExport?api-version=2022-09-01-preview",
+					"protocol": "https",
+					"host": [
+						"management",
+						"azure",
+						"com"
+					],
+					"path": [
+						"subscriptions",
+						"{{subscriptionID}}",
+						"providers",
+						"Microsoft.Logic",
+						"locations",
+						"{{ISERegionName}}",
+						"ValidateWorkflowExport"
+					],
+					"query": [
+						{
+							"key": "api-version",
+							"value": "2022-09-01-preview"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "accessTokenUrl",
+				"value": "https://login.microsoftonline.com/{{TenantId}}/oauth2/v2.0/token",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{azureManagedIdClientSecret}}",
+				"type": "string"
+			},
+			{
+				"key": "grant_type",
+				"value": "client_credentials",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{azureManagedIdClientId}}",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "AzureMgmt token",
+				"type": "string"
+			},
+			{
+				"key": "challengeAlgorithm",
+				"value": "S256",
+				"type": "string"
+			},
+			{
+				"key": "useBrowser",
+				"value": true,
+				"type": "boolean"
+			},
+			{
+				"key": "scope",
+				"value": "https://management.azure.com/.default",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/authorize",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "client_authentication",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "azureManagedIdClientId",
+			"value": "<TBD>"
+		},
+		{
+			"key": "azureManagedIdClientSecret",
+			"value": "<TBD>"
+		},
+		{
+			"key": "TenantId",
+			"value": "<TBD>"
+		},
+		{
+			"key": "subscriptionID",
+			"value": "<TBD>"
+		},
+		{
+			"key": "ISERegionName",
+			"value": "<TBD>"
+		},
+		{
+			"key": "rgName",
+			"value": "<TBD>",
+			"type": "string"
+		}
+	]
+}
