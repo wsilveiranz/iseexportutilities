@@ -5,7 +5,7 @@ $subscriptioname = '<your subscription name>'
 #target resource group
 $resourcegroup =  '<your resource group name>'
 #target ISE instance
-$iseName = '<your ISE name>'
+$isename = '<your ISE name>'
 #set Context to your subscription
 Get-AzSubscription -SubscriptionName $subscriptioname | Select-AzSubscription 
 #Get all Logic Apps in the resource group
@@ -16,7 +16,7 @@ Get-AzResource -ResourceGroupName $resourcegroup -ResourceType Microsoft.Logic/w
     {
         $ise = $itemproperties | Select-Object -ExpandProperty integrationServiceEnvironment
         #Check if the ISE is the one we are looking for
-        if ($ise.name -eq $iseName)
+        if ($ise.name -eq $isename)
         {
             #Add the Logic App to the result
             $result = $result + "{`"id`": `"" + $_.ResourceId + "`"}," + "`n"
