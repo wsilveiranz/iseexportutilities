@@ -1,16 +1,15 @@
-# Connect to your Azure account - this will prompt you for credentials and just to be ran once per session.
-Connect-AzureRmAccount
+#Connect to your Azure account - this will prompt you for credentials and just needs to be ran once per session - Depends on Az module
+Connect-AzAccount
 # target subscription
 $subscriptioname = '<your subscription name>'
 #target resource group
 $resourcegroup =  '<your resource group name>'
 #target ISE instance
 $iseName = '<your ISE name>'
-$result = ''
 #set Context to your subscription
-Get-AzureRmSubscription -SubscriptionName $subscriptioname | Select-AzureRmSubscription 
+Get-AzSubscription -SubscriptionName $subscriptioname | Select-AzSubscription 
 #Get all Logic Apps in the resource group
-Get-AzureRmResource -ResourceGroupName $resourcegroup -ResourceType Microsoft.Logic/workflows -ExpandProperties | ForEach-Object {
+Get-AzResource -ResourceGroupName $resourcegroup -ResourceType Microsoft.Logic/workflows -ExpandProperties | ForEach-Object {
     $itemproperties = $_ | Select-Object Name -ExpandProperty Properties
     #Check if the Logic App is using an ISE
     if([bool]$itemproperties.PSObject.Properties['integrationServiceEnvironment'])
