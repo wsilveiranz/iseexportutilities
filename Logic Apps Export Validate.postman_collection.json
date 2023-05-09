@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "4639b71d-7d00-4add-9544-68bc15120b7e",
-		"name": "Logic Apps Export Validate",
+		"name": "Logic Apps Export Utilities",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "735793"
 	},
@@ -36,6 +36,47 @@
 						"locations",
 						"{{ISERegionName}}",
 						"ValidateWorkflowExport"
+					],
+					"query": [
+						{
+							"key": "api-version",
+							"value": "2022-09-01-preview"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Export Logic Apps List",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"properties\": {\r\n        \"workflows\": [\r\n            {\r\n                \"id\": \"/subscriptions/{{subscriptionID}}/resourceGroups/{{rgName}}/providers/Microsoft.Logic/workflows/LogicApp1\"\r\n            },\r\n            {\r\n                \"id\": \"/subscriptions/{{subscriptionID}}/resourceGroups/{{rgName}}/providers/Microsoft.Logic/workflows/LogicApp2\"\r\n            }\r\n        ],\r\n        \"workflowExportOptions\": \"generateInfrastructureTemplates\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://management.azure.com/subscriptions/{{subscriptionID}}/providers/Microsoft.Logic/locations/{{ISERegionName}}/WorkflowExport?api-version=2022-09-01-preview",
+					"protocol": "https",
+					"host": [
+						"management",
+						"azure",
+						"com"
+					],
+					"path": [
+						"subscriptions",
+						"{{subscriptionID}}",
+						"providers",
+						"Microsoft.Logic",
+						"locations",
+						"{{ISERegionName}}",
+						"WorkflowExport"
 					],
 					"query": [
 						{
