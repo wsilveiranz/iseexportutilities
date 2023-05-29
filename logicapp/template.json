@@ -1,0 +1,524 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_la_ISEUtilities_ValidateExportWorkflows_name": {
+            "defaultValue": "la-ISEUtilities-ValidateExportWorkflows",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_la_ISEUtilities_ValidateExportWorkflows_name')]",
+            "location": "australiaeast",
+            "tags": {
+                "CreatedBy": "wsilveira@microsoft.com",
+                "Purpose": "ISE Export Utilities"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "ISEInstance": {
+                                            "type": "string"
+                                        },
+                                        "ISERegion": {
+                                            "type": "string"
+                                        },
+                                        "ResourceGroupName": {
+                                            "type": "string"
+                                        },
+                                        "SubscriptionID": {
+                                            "type": "string"
+                                        },
+                                        "SubscriptionName": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Get_Logic_Apps_List": {
+                            "runAfter": {
+                                "Initialize_List_of_Workflows": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "authentication": {
+                                    "type": "ManagedServiceIdentity"
+                                },
+                                "method": "GET",
+                                "queries": {
+                                    "$filter": "resourceType eq 'Microsoft.Logic/workflows'",
+                                    "api-version": "2016-06-01"
+                                },
+                                "retryPolicy": {
+                                    "type": "none"
+                                },
+                                "uri": "https://management.azure.com/subscriptions/@{triggerBody()?['SubscriptionID']}/resources"
+                            }
+                        },
+                        "Initialize_ISE_Export_URI": {
+                            "runAfter": {
+                                "Initialize_ISE_Validation_URI": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "exportISEWorkflowURI",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_ISE_Validation_URI": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "validateISEWorkflowURI",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_List_of_Workflows": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "listofworkflows",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_Next_Page": {
+                            "runAfter": {
+                                "Initialize_ISE_Export_URI": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "NextPageURI",
+                                        "type": "string",
+                                        "value": "initialized"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_Result_Array": {
+                            "runAfter": {
+                                "Initialize_Next_Page": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "result",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {
+                                "Initialize_Result_Array": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorResult",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "Until": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": {
+                                    "failed": "@variables('ErrorResult')",
+                                    "succeeded": "@variables('result')"
+                                },
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "statusCode": 200
+                            }
+                        },
+                        "Set_Initial_List_of_Workflows": {
+                            "runAfter": {
+                                "Get_Logic_Apps_List": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "listofworkflows",
+                                "value": "@body('Get_Logic_Apps_List')?['value']"
+                            }
+                        },
+                        "Set_Initial_Next_Link": {
+                            "runAfter": {
+                                "Set_Initial_List_of_Workflows": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "NextPageURI",
+                                "value": "@{body('Get_Logic_Apps_List')?['nextLink']}"
+                            }
+                        },
+                        "Until": {
+                            "actions": {
+                                "For_each": {
+                                    "foreach": "@variables('listofworkflows')",
+                                    "actions": {
+                                        "ISE_Workflow_Operations_Body": {
+                                            "runAfter": {},
+                                            "type": "Compose",
+                                            "inputs": {
+                                                "properties": {
+                                                    "workflowExportOptions": "",
+                                                    "workflows": [
+                                                        {
+                                                            "id": "@{item()['id']}"
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Validate_Current_Item": {
+                                            "runAfter": {
+                                                "ISE_Workflow_Operations_Body": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "validateISEWorkflowURI",
+                                                "value": "https://management.azure.com/subscriptions/@{triggerBody()?['SubscriptionID']}/providers/Microsoft.Logic/locations/@{item()?['location']}/ValidateWorkflowExport?api-version=2022-09-01-preview"
+                                            }
+                                        },
+                                        "Validate_Workflow": {
+                                            "runAfter": {
+                                                "Validate_Current_Item": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Http",
+                                            "inputs": {
+                                                "authentication": {
+                                                    "type": "ManagedServiceIdentity"
+                                                },
+                                                "body": "@outputs('ISE_Workflow_Operations_Body')",
+                                                "headers": {
+                                                    "Content-Type": "Application/json"
+                                                },
+                                                "method": "POST",
+                                                "retryPolicy": {
+                                                    "type": "none"
+                                                },
+                                                "uri": "@variables('validateISEWorkflowURI')"
+                                            }
+                                        },
+                                        "Validation_Call_Succeeded": {
+                                            "actions": {
+                                                "Validation_Operation_Succeeded": {
+                                                    "actions": {
+                                                        "Save_Result_-_Operation_Failed": {
+                                                            "runAfter": {},
+                                                            "type": "AppendToArrayVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorResult",
+                                                                "value": {
+                                                                    "logicapp": "@item()",
+                                                                    "validationState": {
+                                                                        "details": "@body('Validate_Workflow')?['properties']?['workflows']",
+                                                                        "status": "validationFailed"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {},
+                                                    "else": {
+                                                        "actions": {
+                                                            "Condition": {
+                                                                "actions": {
+                                                                    "Export_Call_Succeeded": {
+                                                                        "runAfter": {},
+                                                                        "type": "AppendToArrayVariable",
+                                                                        "inputs": {
+                                                                            "name": "result",
+                                                                            "value": {
+                                                                                "logicapp": "@item()",
+                                                                                "validationState": {
+                                                                                    "details": "@body('Validate_Workflow')?['properties']?['workflows']",
+                                                                                    "status": "exportSucceeded"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "runAfter": {
+                                                                    "Export_Workflow": [
+                                                                        "Succeeded",
+                                                                        "TimedOut",
+                                                                        "Skipped",
+                                                                        "Failed"
+                                                                    ]
+                                                                },
+                                                                "else": {
+                                                                    "actions": {
+                                                                        "Append_to_array_variable": {
+                                                                            "runAfter": {},
+                                                                            "type": "AppendToArrayVariable",
+                                                                            "inputs": {
+                                                                                "name": "ErrorResult",
+                                                                                "value": {
+                                                                                    "logicapp": "@item()",
+                                                                                    "validationState": {
+                                                                                        "details": "@body('Export_Workflow')",
+                                                                                        "status": "exportFailed"
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "expression": {
+                                                                    "and": [
+                                                                        {
+                                                                            "equals": [
+                                                                                "@outputs('Export_Workflow')['statusCode']",
+                                                                                200
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "type": "If"
+                                                            },
+                                                            "Export_Current_Item": {
+                                                                "runAfter": {},
+                                                                "type": "SetVariable",
+                                                                "inputs": {
+                                                                    "name": "exportISEWorkflowURI",
+                                                                    "value": "https://management.azure.com/subscriptions/@{triggerBody()?['SubscriptionID']}/providers/Microsoft.Logic/locations/@{items('For_each')?['location']}/WorkflowExport?api-version=2022-09-01-preview"
+                                                                }
+                                                            },
+                                                            "Export_Workflow": {
+                                                                "runAfter": {
+                                                                    "Export_Current_Item": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "Http",
+                                                                "inputs": {
+                                                                    "authentication": {
+                                                                        "type": "ManagedServiceIdentity"
+                                                                    },
+                                                                    "body": "@outputs('ISE_Workflow_Operations_Body')",
+                                                                    "headers": {
+                                                                        "Content-Type": "application/json"
+                                                                    },
+                                                                    "method": "POST",
+                                                                    "retryPolicy": {
+                                                                        "type": "none"
+                                                                    },
+                                                                    "uri": "@variables('exportISEWorkflowURI')"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@body('Validate_Workflow')?['properties']?['validationState']",
+                                                                    "Failed"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Validate_Workflow": [
+                                                    "Succeeded",
+                                                    "TimedOut",
+                                                    "Skipped",
+                                                    "Failed"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "Save_Result_-_Call_Failed": {
+                                                        "runAfter": {},
+                                                        "type": "AppendToArrayVariable",
+                                                        "inputs": {
+                                                            "name": "ErrorResult",
+                                                            "value": {
+                                                                "logicapp": "@item()",
+                                                                "validationState": {
+                                                                    "details": "@{outputs('Validate_Workflow')['statusCode']}",
+                                                                    "status": "validationFailed"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@outputs('Validate_Workflow')['statusCode']",
+                                                            200
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "type": "Foreach"
+                                },
+                                "Validate_Next_Page": {
+                                    "actions": {
+                                        "Set_listworkflows_to_empty": {
+                                            "runAfter": {},
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "listofworkflows",
+                                                "value": []
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "For_each": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Get_Next_List_of_Workflows": {
+                                                "runAfter": {},
+                                                "type": "Http",
+                                                "inputs": {
+                                                    "authentication": {
+                                                        "type": "ManagedServiceIdentity"
+                                                    },
+                                                    "method": "GET",
+                                                    "uri": "@variables('NextPageURI')"
+                                                }
+                                            },
+                                            "Set_List_of_Workflows": {
+                                                "runAfter": {
+                                                    "Get_Next_List_of_Workflows": [
+                                                        "Succeeded"
+                                                    ]
+                                                },
+                                                "type": "SetVariable",
+                                                "inputs": {
+                                                    "name": "listofworkflows",
+                                                    "value": "@body('Get_next_list_of_workflows')?['value']"
+                                                }
+                                            },
+                                            "Set_Next_Page_URI": {
+                                                "runAfter": {
+                                                    "Set_List_of_Workflows": [
+                                                        "Succeeded"
+                                                    ]
+                                                },
+                                                "type": "SetVariable",
+                                                "inputs": {
+                                                    "name": "NextPageURI",
+                                                    "value": "@{body('Get_Next_List_of_Workflows')?['nextLink']}"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@empty(variables('NextPageURI'))",
+                                                    true
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                }
+                            },
+                            "runAfter": {
+                                "Set_Initial_Next_Link": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": "@equals(variables('listofworkflows'), json('[]'))",
+                            "limit": {
+                                "count": 1000,
+                                "timeout": "PT1H"
+                            },
+                            "type": "Until"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            }
+        }
+    ]
+}
